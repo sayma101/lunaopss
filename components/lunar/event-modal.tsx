@@ -7,6 +7,8 @@ import { EVENTS, RESOURCE_KEYS } from '@/lib/game/data'
 import { eventEffects } from '@/lib/game/engine'
 import { game } from '@/lib/game/store'
 import type { GameState } from '@/lib/game/types'
+import { WHY_THIS_MATTERS } from '@/lib/nasa/eclss'
+import { DataBadge } from './nasa-badge'
 
 export function EventModal({ state }: { state: GameState }) {
   const pe = state.pendingEvent
@@ -37,6 +39,23 @@ export function EventModal({ state }: { state: GameState }) {
         </p>
         <h2 className="font-display mt-1 text-2xl font-semibold uppercase">{def.title}</h2>
         <p className="mt-2 text-sm text-slate-300">{def.blurb}</p>
+        {def.id === 'solar-radiation' && (
+          <div className="mt-3 border-l-2 border-amber-300/60 pl-3 text-xs text-slate-300">
+            <DataBadge kind={state.nasa?.origin === 'live' ? 'real' : 'historical'} />
+            <p className="mt-1">
+              {state.nasa
+                ? `Scenario based on NASA DONKI: ${state.nasa.event.title}. `
+                : ''}
+              {WHY_THIS_MATTERS['solar-radiation']}
+            </p>
+          </div>
+        )}
+        {def.id === 'water-leak' && (
+          <div className="mt-3 border-l-2 border-cyan-300/60 pl-3 text-xs text-slate-300">
+            <DataBadge kind="reference" />
+            <p className="mt-1">{WHY_THIS_MATTERS['water-leak']}</p>
+          </div>
+        )}
 
         <ul className="mt-4 space-y-2">
           {def.choices.map((c) => {

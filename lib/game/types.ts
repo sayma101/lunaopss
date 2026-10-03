@@ -1,4 +1,5 @@
 import type { ModuleId } from '@/lib/missions'
+import type { NasaScenarioState } from '@/lib/nasa/types'
 
 export type Difficulty = 'Cadet' | 'Explorer' | 'Commander'
 
@@ -121,6 +122,8 @@ export interface GameState {
   stats: MissionStats
   seed: number
   nextId: number
+  /** Optional training scenario derived from NASA DONKI data. Absent in older saves. */
+  nasa?: NasaScenarioState | null
 }
 
 export interface EventChoice {
