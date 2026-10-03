@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Heart, Leaf, Telescope } from 'lucide-react'
+import { game, useGame } from '@/lib/game/store'
+import type { Difficulty } from '@/lib/game/types'
 import { PrimaryButton } from './action-button'
 import { GameNav } from './game-nav'
 import { LunarScene } from './lunar-scene'
@@ -12,14 +15,16 @@ const GOALS = [
   { name: 'Sustain', icon: Leaf, text: 'Hold power, air, water and food in balance.' },
   { name: 'Discover', icon: Telescope, text: 'Run science to uncover the secrets of the pole.' },
 ]
-const LEVELS = [
+const LEVELS: { name: Difficulty; text: string }[] = [
   { name: 'Cadet', text: 'Forgiving resources. Learn the ropes.' },
   { name: 'Explorer', text: 'Balanced risks and steady events.' },
   { name: 'Commander', text: 'Scarce supplies. Harsh surprises.' },
 ]
 
 export function MissionSetup() {
-  const [level, setLevel] = useState('Explorer')
+  const router = useRouter()
+  const { state, hydrated } = useGame()
+  const [level, setLevel] = useState<Difficulty>('Explorer')
   return (
     <main className="relative min-h-dvh overflow-hidden">
       <LunarScene className="opacity-60" />
@@ -102,7 +107,19 @@ export function MissionSetup() {
           </fieldset>
 
           <div className="mt-10">
-            <PrimaryButton href="/mission/base">Continue to Base Builder</PrimaryButton>
+            {hydrated && state && state.missionStatus === 'active' && (
+              <p className="mb-3 text-xs text-amber-300/90">
+                You have a mission in progress. Starting a new one replaces it.
+              </p>
+            )}
+            <PrimaryButton
+              onClick={() => {
+                game.start(level)
+                router.push('/mission/base')
+              }}
+            >
+              Continue to Base Builder
+            </PrimaryButton>
           </div>
         </section>
       </div>

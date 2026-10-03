@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useGame } from '@/lib/game/store'
 import { GhostButton, PrimaryButton } from './action-button'
 import { LunarScene } from './lunar-scene'
 
@@ -14,6 +15,7 @@ const HOW = [
 
 export function HomeScreen() {
   const [help, setHelp] = useState(false)
+  const { state, hydrated } = useGame()
   return (
     <main className="relative min-h-dvh overflow-hidden">
       <LunarScene />
@@ -67,7 +69,24 @@ export function HomeScreen() {
           transition={{ delay: 1.7, duration: 0.9 }}
           className="mt-8 flex flex-col gap-3 sm:flex-row"
         >
-          <PrimaryButton href="/mission/setup">New Mission</PrimaryButton>
+          {hydrated && state ? (
+            <>
+              <div className="flex flex-col items-center gap-1">
+                <PrimaryButton href="/mission/control">Resume Mission</PrimaryButton>
+                <p className="font-display text-[10px] uppercase tracking-[0.25em] text-slate-400">
+                  {state.missionStatus === 'active'
+                    ? `Day ${state.missionDay} of 30`
+                    : state.missionStatus === 'success'
+                      ? 'Completed'
+                      : 'Failed'}{' '}
+                  · {state.difficulty}
+                </p>
+              </div>
+              <GhostButton href="/mission/setup">New Mission</GhostButton>
+            </>
+          ) : (
+            <PrimaryButton href="/mission/setup">New Mission</PrimaryButton>
+          )}
           <button
             type="button"
             onClick={() => setHelp(true)}

@@ -1,6 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { canRefund } from '@/lib/game/engine'
+import { game, useGame } from '@/lib/game/store'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Battery,
@@ -28,18 +31,25 @@ const ICONS: Record<ModuleId, LucideIcon> = {
 }
 
 export function BaseBuilder() {
-  const [built, setBuilt] = useState<ModuleId[]>([])
+  const router = useRouter()
+  const { state, hydrated } = useGame()
   const [warn, setWarn] = useState<ModuleId | null>(null)
-  const spent = MODULES.filter((m) => built.includes(m.id)).reduce((s, m) => s + m.cost, 0)
-  const left = BUILD_CREDITS - spent
+  const built = state?.installedModules ?? []
+  const left = state?.buildCredits ?? BUILD_CREDITS
+  const locked = !!state && !canRefund(state)
+
+  useEffect(() => {
+    if (hydrated && !state) router.replace('/mission/setup')
+  }, [hydrated, state, router])
 
   function toggle(id: ModuleId, cost: number) {
-    if (built.includes(id)) return setBuilt(built.filter((b) => b !== id))
+    if (!state || locked) return
+    if (built.includes(id)) return game.sell(id)
     if (cost > left) {
       setWarn(id)
       return void setTimeout(() => setWarn(null), 1200)
     }
-    setBuilt([...built, id])
+    game.buy(id)
   }
 
   return (
@@ -132,6 +142,7 @@ export function BaseBuilder() {
           <div className="relative mt-4 flex items-center justify-between">
             <p className="font-display text-xs uppercase tracking-[0.25em] text-slate-400" aria-live="polite">
               {built.length} / {MODULES.length} modules deployed
+              {locked && ' · locked after day 1'}
             </p>
             <PrimaryButton href="/mission/control">Launch Mission</PrimaryButton>
           </div>
