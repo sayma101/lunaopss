@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 import type { ModuleId } from '@/lib/missions'
+import type { NasaScenarioState } from '@/lib/nasa/types'
 import * as E from './engine'
 import type { AssignmentId, CrewId, Difficulty, GameState, OrderId, ScienceId } from './types'
 
@@ -63,6 +64,7 @@ export const game = {
   assign: (c: CrewId, a: AssignmentId) => update((s) => E.assignCrew(s, c, a)),
   order: (o: OrderId) => update((s) => E.setOrder(s, o)),
   science: (id: ScienceId | null) => update((s) => E.planScience(s, id)),
+  setNasa: (n: NasaScenarioState) => update((s) => E.setNasaScenario(s, n)),
   execute: () => update(E.executeDay),
   ack: () => update(E.acknowledgeReport),
   resolve: (choiceId: string) => update((s) => E.resolveEvent(s, choiceId)),

@@ -1,4 +1,5 @@
 import { BUILD_CREDITS, MODULES, type ModuleId } from '@/lib/missions'
+import type { NasaScenarioState } from '@/lib/nasa/types'
 import {
   CREW,
   DIFFICULTY,
@@ -226,6 +227,15 @@ export function scienceMultiplier(s: GameState) {
   )
 }
 
+/** Attach a NASA training scenario once, before the first day is executed. */
+export function setNasaScenario(s: GameState, nasa: NasaScenarioState): GameState {
+  if (s.missionStatus !== 'active' || s.stats.days > 0 || s.nasa) return s
+  const d = structuredClone(s)
+  d.nasa = nasa
+  log(d, d.missionDay, 'day', `NASA scenario loaded: ${nasa.event.title}`)
+  return d
+}
+
 export function acknowledgeReport(s: GameState): GameState {
   if (!s.lastReport || s.lastReport.acknowledged) return s
   const d = structuredClone(s)
@@ -420,11 +430,13 @@ export function executeDay(s: GameState): GameState {
       if (pool.length) {
         const [roll2, s2] = rand(d.seed)
         d.seed = s2
-        const total = pool.reduce((a, e) => a + e.weight, 0)
+        const weightOf = (e: (typeof pool)[number]) =>
+          e.id === 'solar-radiation' ? e.weight * (d.nasa?.weightMult ?? 1) : e.weight
+        const total = pool.reduce((a, e) => a + weightOf(e), 0)
         let pick = roll2 * total
         let chosen = pool[0]
         for (const e of pool) {
-          pick -= e.weight
+          pick -= weightOf(e)
           if (pick <= 0) {
             chosen = e
             break
@@ -433,7 +445,10 @@ export function executeDay(s: GameState): GameState {
         d.pendingEvent = {
           id: chosen.id,
           day,
-          severity: diff.severity * order.severity,
+          severity:
+            diff.severity *
+            order.severity *
+            (chosen.id === 'solar-radiation' ? (d.nasa?.severityMult ?? 1) : 1),
           radiationShield: order.radiationShield,
         }
         d.eventHistory.push({ day, eventId: chosen.id, choiceId: null })

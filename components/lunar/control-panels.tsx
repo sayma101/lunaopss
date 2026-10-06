@@ -7,10 +7,13 @@ import { CREW, ORDER_LIST, SCIENCE, SCIENCE_LIST } from '@/lib/game/data'
 import { lunaAdvice, scienceBlocker, scienceMultiplier } from '@/lib/game/engine'
 import { game } from '@/lib/game/store'
 import type { GameState, TimelineKind } from '@/lib/game/types'
+import type { NasaFeed } from '@/lib/nasa/types'
+import { NasaPanel } from './nasa-panel'
 
-export type PanelId = 'crew' | 'orders' | 'science' | 'systems' | 'timeline' | 'luna'
+export type PanelId = 'crew' | 'orders' | 'science' | 'systems' | 'timeline' | 'luna' | 'nasa'
 
 const TITLES: Record<PanelId, string> = {
+  nasa: 'NASA Data Center',
   crew: 'Crew Assignments',
   orders: 'Daily Order',
   science: 'Science Missions',
@@ -22,10 +25,12 @@ const TITLES: Record<PanelId, string> = {
 export function ControlPanel({
   id,
   state,
+  feed,
   onClose,
 }: {
   id: PanelId
   state: GameState
+  feed: NasaFeed | null
   onClose: () => void
 }) {
   return (
@@ -50,6 +55,7 @@ export function ControlPanel({
       {id === 'systems' && <SystemsPanel state={state} />}
       {id === 'timeline' && <TimelinePanel state={state} />}
       {id === 'luna' && <LunaPanel state={state} />}
+      {id === 'nasa' && <NasaPanel state={state} feed={feed} />}
     </section>
   )
 }

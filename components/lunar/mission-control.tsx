@@ -8,6 +8,7 @@ import {
   Calendar,
   ClipboardList,
   Moon,
+  Satellite,
   Settings2,
   Users,
   type LucideIcon,
@@ -23,6 +24,9 @@ import { GameNav } from './game-nav'
 import { LunarScene } from './lunar-scene'
 import { MissionEnd } from './mission-end'
 import { ResourcePanel } from './resource-panel'
+import { NasaWeatherCard } from './nasa-weather-card'
+import { useNasaFeed } from './use-nasa'
+import { scenarioFromFeed } from '@/lib/nasa/scenario'
 
 const DOCK: { id: PanelId; name: string; icon: LucideIcon }[] = [
   { id: 'crew', name: 'Crew', icon: Users },
@@ -31,12 +35,19 @@ const DOCK: { id: PanelId; name: string; icon: LucideIcon }[] = [
   { id: 'systems', name: 'Systems', icon: Settings2 },
   { id: 'timeline', name: 'Timeline', icon: Calendar },
   { id: 'luna', name: 'Luna', icon: Moon },
+  { id: 'nasa', name: 'NASA', icon: Satellite },
 ]
 
 export function MissionControl() {
   const { state, hydrated } = useGame()
   const router = useRouter()
   const [panel, setPanel] = useState<PanelId | null>(null)
+  const { feed, loading: nasaLoading } = useNasaFeed()
+  const needsScenario = !!state && state.missionStatus === 'active' && state.stats.days === 0 && !state.nasa
+
+  useEffect(() => {
+    if (needsScenario && feed) game.setNasa(scenarioFromFeed(feed))
+  }, [needsScenario, feed])
 
   useEffect(() => {
     if (hydrated && !state) router.replace('/mission/setup')
@@ -137,7 +148,8 @@ export function MissionControl() {
           )}
 
           <ResourcePanel resources={state.resources} />
-          {panel && <ControlPanel id={panel} state={state} onClose={() => setPanel(null)} />}
+          {!panel && !ended && <NasaWeatherCard feed={feed} loading={nasaLoading} onOpen={() => setPanel('nasa')} />}
+          {panel && <ControlPanel id={panel} state={state} feed={feed} onClose={() => setPanel(null)} />}
         </div>
 
         {/* Command dock */}
